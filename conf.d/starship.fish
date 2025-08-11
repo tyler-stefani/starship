@@ -3,7 +3,7 @@ or exit 0
 
 # set temp file and signal for async prompts
 if test -n "$XDG_RUNTIME_DIR"
-    set -g starship_temp_dir "$XDG_RUNTIME_DIR"fish-async-prompt
+    set -g starship_temp_dir "$XDG_RUNTIME_DIR"/fish-async-prompt
 else
     set -g starship_temp_dir /tmp/fish-async-prompt
 end
