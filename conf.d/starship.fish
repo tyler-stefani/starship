@@ -30,14 +30,15 @@ end
 
 
 function fish_right_prompt
+    set STARSHIP_CMD_PIPESTATUS $pipestatus
+    set STARSHIP_CMD_STATUS $STARSHIP_CMD_PIPESTATUS[-1]
+
     switch "$fish_key_bindings"
         case fish_hybrid_key_bindings fish_vi_key_bindings
             set STARSHIP_KEYMAP "$fish_bind_mode"
         case '*'
             set STARSHIP_KEYMAP insert
     end
-    set STARSHIP_CMD_PIPESTATUS $pipestatus
-    set STARSHIP_CMD_STATUS $status
     # Account for changes in variable name between v2.7 and v3.0
     set STARSHIP_DURATION "$CMD_DURATION$cmd_duration"
     set STARSHIP_JOBS (count (jobs -p))
@@ -105,14 +106,15 @@ set -gx STARSHIP_SESSION_KEY (string sub -s1 -l16 (random)(random)(random)(rando
 
 # async related functions
 function write_prompt_to_temp --on-event fish_prompt
+    set STARSHIP_CMD_PIPESTATUS (string join ' ' $pipestatus)
+    set STARSHIP_CMD_STATUS $pipestatus[-1]
+
     switch "$fish_key_bindings"
         case fish_hybrid_key_bindings fish_vi_key_bindings
             set STARSHIP_KEYMAP "$fish_bind_mode"
         case '*'
             set STARSHIP_KEYMAP insert
     end
-    set STARSHIP_CMD_PIPESTATUS $pipestatus
-    set STARSHIP_CMD_STATUS $status
     # Account for changes in variable name between v2.7 and v3.0
     set STARSHIP_DURATION "$CMD_DURATION$cmd_duration"
     set STARSHIP_JOBS (count (jobs -p))
@@ -120,7 +122,7 @@ function write_prompt_to_temp --on-event fish_prompt
     fish -c 'starship prompt \
 	    --terminal-width='"$COLUMNS"' \
 	    --status='$STARSHIP_CMD_STATUS' \
-	    --pipestatus='"$STARSHIP_CMD_PIPESTATUS"' \
+	    --pipestatus="'"$STARSHIP_CMD_PIPESTATUS"'" \
 	    --keymap='$STARSHIP_KEYMAP' \
 	    --cmd-duration='$STARSHIP_DURATION' \
 	    --jobs='$STARSHIP_JOBS' > '$starship_temp_file' \
