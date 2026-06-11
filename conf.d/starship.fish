@@ -22,22 +22,19 @@ for f in "$starship_temp_dir"/*_last_prompt
 end
 
 function fish_prompt
-    if test "$TRANSIENT" = "1"
+    if test "$TRANSIENT" = 1 -o ! -e "$starship_temp_file"
         starship_transient_prompt_func
-    else if test -e $starship_temp_file
-        cat $starship_temp_file 
     else
-        starship_transient_prompt_func
+        cat "$starship_temp_file"
     end
 end
 
 function starship_transient_prompt_func
     # Clear from cursor to end of screen as `commandline -f repaint` does not do this
     # See https://github.com/fish-shell/fish-shell/issues/8418
-    printf \e\[0J
+    printf \e[0J
     starship module character
 end
-
 
 function fish_right_prompt
     set STARSHIP_CMD_PIPESTATUS $pipestatus
@@ -52,12 +49,9 @@ function fish_right_prompt
     # Account for changes in variable name between v2.7 and v3.0
     set STARSHIP_DURATION "$CMD_DURATION$cmd_duration"
     set STARSHIP_JOBS (count (jobs -p))
-    if test "$TRANSIENT" = "1"
-        if type -q starship_transient_rprompt_func
-            starship_transient_rprompt_func
-        else
-            printf ""
-        end
+    if test "$TRANSIENT" = 1
+        type -q starship_transient_rprompt_func
+        and starship_transient_rprompt_func
     else
         starship prompt --right --terminal-width="$COLUMNS" --status=$STARSHIP_CMD_STATUS --pipestatus="$STARSHIP_CMD_PIPESTATUS" --keymap=$STARSHIP_KEYMAP --cmd-duration=$STARSHIP_DURATION --jobs=$STARSHIP_JOBS
     end
@@ -128,15 +122,16 @@ function write_prompt_to_temp --on-event fish_prompt
     # Account for changes in variable name between v2.7 and v3.0
     set STARSHIP_DURATION "$CMD_DURATION$cmd_duration"
     set STARSHIP_JOBS (count (jobs -p))
-    
-    fish -c 'starship prompt \
-	    --terminal-width='"$COLUMNS"' \
-	    --status='$STARSHIP_CMD_STATUS' \
-	    --pipestatus="'"$STARSHIP_CMD_PIPESTATUS"'" \
-	    --keymap='$STARSHIP_KEYMAP' \
-	    --cmd-duration='$STARSHIP_DURATION' \
-	    --jobs='$STARSHIP_JOBS' > '$starship_temp_file' \
-	    && kill -s '"$starship_async_signal"' '"$fish_pid"'' &
+
+    fish -c "starship prompt \
+    --terminal-width=$COLUMNS \
+    --status=$STARSHIP_CMD_STATUS \
+    --pipestatus='$STARSHIP_CMD_PIPESTATUS' \
+    --keymap=$STARSHIP_KEYMAP \
+    --cmd-duration=$STARSHIP_DURATION \
+    --jobs=$STARSHIP_JOBS \
+    > '$starship_temp_file' \
+    && kill -s $starship_async_signal $fish_pid" &
     disown
 end
 
@@ -147,4 +142,3 @@ end
 function remove_temp_prompt_on_exit --on-event fish_exit
     rm -f $starship_temp_file
 end
-
