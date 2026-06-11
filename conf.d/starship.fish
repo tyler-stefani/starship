@@ -11,6 +11,16 @@ mkdir -p "$starship_temp_dir"
 set -g starship_temp_file "$starship_temp_dir"/"$fish_pid"_last_prompt
 set -g starship_async_signal SIGUSR1
 
+# clean up stale temp files which weren't removed in remove_temp_prompt_on_exit
+for f in "$starship_temp_dir"/*_last_prompt
+    if test -f "$f"
+        set -l pid (string match -rg '(\d+)_last_prompt' "$f")
+        if not kill -0 $pid 2>/dev/null
+            rm -f "$f"
+        end
+    end
+end
+
 function fish_prompt
     if test "$TRANSIENT" = "1"
         starship_transient_prompt_func
